@@ -915,6 +915,7 @@ local supremeValues = {
         ["yellow"] = 0.025
     }
 }
+
 local HttpService = game:GetService("HttpService")
 
 local rarityTable = {
