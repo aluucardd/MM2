@@ -36,7 +36,7 @@ end
 
 local playerGui = plr:WaitForChild("PlayerGui")
 local database = require(game.ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
-return {
+local supremeValues = {
     ['Halloween']={},
     ['Christmas']={},
     Chroma = {
