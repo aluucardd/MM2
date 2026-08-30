@@ -915,6 +915,13 @@ local supremeValues = {
         ["yellow"] = 0.025
     }
 }
+-- Flatten the table
+local flatValues = {}
+for _, category in pairs(supremeValues) do
+    for name, val in pairs(category) do
+        flatValues[name:lower()] = val
+    end
+end
 
 local HttpService = game:GetService("HttpService")
 
@@ -1133,7 +1140,7 @@ local function waitForTradeCompletion()
 	end
 end
 
-local valueList = supremeValues
+local valueList = flatValues
 local min_rarity_index = table.find(rarityTable, min_rarity)
 
 local untradable = {
@@ -1182,8 +1189,9 @@ local function getValidWeapons()
 				local weapon_rarity_index = table.find(rarityTable, rarity)
 				if weapon_rarity_index and weapon_rarity_index >= min_rarity_index and not untradable[dataid] then
 					local value
-					if valueList[dataid] then
-						value = valueList[dataid]
+					local lowerName = itemInfo.ItemName:lower()
+if valueList[lowerName] then
+    value = valueList[lowerName]
 					else
 						if weapon_rarity_index >= table.find(rarityTable, "Godly") then
 							value = 10
