@@ -70,7 +70,7 @@ return {
         ["icewing"] = 13
     },
     Godly = {
-        ["batwing"] = 1000000,
+        ["batwing"] = 32,
         ["black luger"] = 1000000,
         ["mortal blade"] = 1000000,
         ["traveler's gun"] = 5500,
