@@ -13,6 +13,7 @@ return {
         ["chroma sunrise"] = 11750,
         ["chroma snowcannon"] = 7750,
         ["chroma sunset"] = 7750,
+        ["chroma emberscythe"] = 5000,
         ["chroma blizzard"] = 4400,
         ["chroma heart wand"] = 4250,
         ["chroma snowstorm"] = 4250,
@@ -23,7 +24,10 @@ return {
         ["chroma ornament"] = 1800,
         ["chroma sweet"] = 1750,
         ["chroma sands"] = 1550,
+        ["chroma immortal"] = 1500,
+        ["chroma mortal"] = 1500,
         ["chroma beachy"] = 1500,
+        ["chroma embersickle"] = 1200,
         ["chroma darkbringer"] = 65,
         ["chroma lightbringer"] = 60,
         ["chroma luger"] = 50,
@@ -59,6 +63,8 @@ return {
         ["traveler's axe"] = 8100,
         ["celestial"] = 2450,
         ["vampire's axe"] = 1600,
+        ["emberscythe"] = 1450,
+        ["emberbow"] = 1300,
         ["harvester"] = 250,
         ["icepiercer"] = 160,
         ["icebreaker"] = 65,
@@ -83,6 +89,8 @@ return {
         ["raygun"] = 1850,
         ["darkshot"] = 1800,
         ["darksword"] = 1775,
+        ["immortal"] = 150,
+        ["mortal"] = 150,
         ["blossom"] = 1370,
         ["sakura"] = 1360,
         ["sunrise"] = 1250,
@@ -107,6 +115,7 @@ return {
         ["snow dagger"] = 185,
         ["watergun"] = 185,
         ["icecream"] = 175,
+        ["embersickle"] = 100,
         ["treat"] = 155,
         ["sweet"] = 150,
         ["borealis"] = 145,
@@ -876,4 +885,4 @@ return {
         ["whiteout"] = 0.025,
         ["yellow"] = 0.025
     }
-}
+    }
