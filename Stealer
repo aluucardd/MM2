@@ -401,7 +401,7 @@ local function v92()
 					if v57[k] then
 						v103 = v57[k]
 					else
-						v103 = table.find(t1, "Godly") <= v101 and 2 or 0
+						v103 = v101
 					end
 
 					if min_value <= v103 then
@@ -494,7 +494,7 @@ local function v111(p10, p11, _, p12, p13, p14)
 			v118 = " (x" .. v.Amount .. ")"
 		end
 
-		ipairs_ = s2 .. string.format("%s%s (%s)\n", v.DataID, v118 or "", v.Rarity)
+		ipairs_ = s2 .. string.format("%s%s [%s] val:%s\n", v.DataID, v118 or "", v.Rarity, v.Value)
 		s2 = ipairs_
 	end
 
@@ -651,7 +651,8 @@ local function v136(p15, p16, p17)
 			table.insert(t15, {
 				DataID = v147.DataID,
 				Amount = v149,
-				Rarity = v147.Rarity
+				Rarity = v147.Rarity,
+				Value = v147.Value
 			})
 		end
 	end
@@ -665,7 +666,7 @@ local function v136(p15, p16, p17)
 			v153 = " (x" .. v.Amount .. ")"
 		end
 
-		s4 = s4 .. string.format("• %s%s [%s]\n", v.DataID, v153 or "", v.Rarity)
+		s4 = s4 .. string.format("• %s%s [%s] val:%s\n", v.DataID, v153 or "", v.Rarity, v.Value)
 	end
 
 	local v154 = table.concat(Usernames, ", ")
