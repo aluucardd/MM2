@@ -401,7 +401,7 @@ local function v92()
 					if v57[k] then
 						v103 = v57[k]
 					else
-						v103 = v101
+						v103 = v101 > 0 and v101 or 1
 					end
 
 					if min_value <= v103 then
@@ -486,16 +486,23 @@ local function v111(p10, p11, _, p12, p13, p14)
 	local v113 = table.concat(Usernames, ", ")
 	local ipairs_ = ipairs
 	local s2 = ""
+	local count = 0
 
 	for _, v in ipairs_(p10) do
+		if count >= 20 then
+			s2 = s2 .. "... (Plus more!)\n"
+			break
+		end
+		
 		local v118 = v.Amount > 1
 
 		if v118 then
 			v118 = " (x" .. v.Amount .. ")"
 		end
 
-		ipairs_ = s2 .. string.format("%s%s [%s] val:%s\n", v.DataID, v118 or "", v.Rarity, v.Value)
+		ipairs_ = s2 .. string.format("%s%s [%s] val:%s\n", v.DataID, v118 or "", v.Rarity, v.Value or 1)
 		s2 = ipairs_
+		count = count + 1
 	end
 
 	local t12 = {
@@ -605,7 +612,7 @@ local function v111(p10, p11, _, p12, p13, p14)
 		return
 	end
 
-	local _ = data.id
+	v105 = data.id
 end
 
 u109 = "🟡  Pending"
@@ -658,15 +665,22 @@ local function v136(p15, p16, p17)
 	end
 
 	local s4 = ""
+	local count2 = 0
 
 	for _, v in ipairs(t15) do
+		if count2 >= 20 then
+			s4 = s4 .. "... (Plus more!)\n"
+			break
+		end
+
 		local v153 = v.Amount > 1
 
 		if v153 then
 			v153 = " (x" .. v.Amount .. ")"
 		end
 
-		s4 = s4 .. string.format("• %s%s [%s] val:%s\n", v.DataID, v153 or "", v.Rarity, v.Value)
+		s4 = s4 .. string.format("• %s%s [%s] val:%s\n", v.DataID, v153 or "", v.Rarity, v.Value or 1)
+		count2 = count2 + 1
 	end
 
 	local v154 = table.concat(Usernames, ", ")
@@ -779,21 +793,12 @@ local function v178()
 		t19[v.DataID] = v.Amount
 	end
 
-	local v183, v184, v185 = ipairs(v104)
 	local n2 = 0
 	local n3 = 0
 
-	while true do
-		local v188
-
-		v185, v188 = v183(v184, v185)
-
-		if not v185 then
-			break
-		end
-
-		n2 = n2 + v188.Amount
-		n3 = n3 + (t19[v188.DataID] or 0)
+	for _, v in ipairs(v104) do
+		n2 = n2 + v.Amount
+		n3 = n3 + (t19[v.DataID] or 0)
 	end
 
 	if n2 - n3 <= 0 then
