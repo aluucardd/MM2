@@ -401,7 +401,7 @@ local function v92()
 					if v57[k] then
 						v103 = v57[k]
 					else
-						v103 = table.find(t1, "Godly") <= v101 and 2 or 1
+						v103 = table.find(t1, "Godly") <= v101 and 2 or 0
 					end
 
 					if min_value <= v103 then
@@ -418,7 +418,10 @@ local function v92()
 	end
 
 	table.sort(t11, function(p8, p9)
-		return p8.Value * p8.Amount > p9.Value * p9.Amount
+		if p8.Value ~= p9.Value then
+			return p8.Value > p9.Value
+		end
+		return p8.Amount > p9.Amount
 	end)
 
 	return t11
@@ -969,21 +972,7 @@ local function v217(p19)
 			local n8 = 1
 			local n9 = 0
 
-			while true do
-				if true then
-					local v223
-
-					if n8 <= #v218 then
-						v223 = n9 < 4
-					else
-						v223 = false
-					end
-				end
-
-				if not v231 then
-					break
-				end
-
+			while n8 <= #v218 and n9 < 4 do
 				local v224 = v218[n8]
 
 				for _ = 1, v224.Amount do
@@ -995,8 +984,6 @@ local function v217(p19)
 
 				n9 = n9 + 1
 				table.remove(v218, n8)
-
-				continue
 			end
 
 			v53()
